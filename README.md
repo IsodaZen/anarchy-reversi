@@ -1,166 +1,145 @@
-# Anarchy Reversi
+# アナーキーオセロ（Anarchy Reversi）
 
-モダンなReactで実装したリバーシ(オセロ)ゲームです。
+子供向けWeb版リバーシゲーム。手動で石をひっくり返せる自由度の高い実装が特徴。
 
-## 特徴
+## 🎮 プロジェクト概要
 
-- ⚛️ **React 18+** - 最新のReact Hooksを活用
-- ⚡ **Vite** - 高速な開発体験
-- 🎨 **CSS Modules** - スコープ付きスタイリング
-- 🎮 **完全なゲームロジック** - リバーシのルールを完全実装
-- 🤖 **AI対戦** - 複数の難易度レベル (予定)
-- 📱 **レスポンシブデザイン** - あらゆるデバイスで快適にプレイ
+「アナーキーオセロ」は、従来のルールに縛られない自由なリバーシゲームです。
+プレイヤーは手動で石を自由に操作でき、イカサマも含めて思い通りに遊べます。
 
-## デモ
+### 主な仕様
 
-(準備中)
+- ✅ ターン制リバーシ（オセロ）
+- ✅ プレイヤーが手動で石を自由に操作可能（イカサマも可能）
+- ✅ リアルタイム対戦機能（WebSocket使用）
+- ✅ マッチング機能なし：ルームID共有方式
+- ✅ ユーザー登録不要
 
-## セットアップ
+## 🛠️ 技術スタック
+
+### フロントエンド
+
+- React 19+
+- TypeScript
+- WebSocket Client
+- CSS Modules または Tailwind CSS
+
+### バックエンド
+
+- Go 1.25+
+- Gin（Webフレームワーク）
+- gorilla/websocket（WebSocket実装）
+- go-redis/redis（Redis接続）
+
+### 主要パッケージ
+
+```go
+github.com/gin-gonic/gin      // Webフレームワーク
+github.com/gorilla/websocket  // WebSocket実装
+github.com/redis/go-redis/v9  // Redis接続
+github.com/google/uuid        // ルームID生成
+```
+
+### デプロイ・インフラ
+
+- Railway（Hobbyプラン）
+- Docker containerデプロイ
+- 月額予算：$5以内
+
+## 🏗️ アーキテクチャ
+
+```text
+React Frontend（TypeScript）
+    ↓ WebSocket
+Gin Server（Go）
+    - WebSocketハンドラー
+    - ルーム管理API
+    - ゲーム状態管理
+    ↓
+Redis
+    - ルーム情報
+    - 盤面状態
+    - 接続プレイヤー情報
+```
+
+## 📁 ディレクトリ構成
+
+```text
+anarchy-reversi/
+├── frontend/          # React アプリ
+│   ├── src/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── utils/
+│   │   └── App.tsx
+│   ├── public/
+│   └── package.json
+├── backend/           # Go サーバー
+│   ├── main.go
+│   ├── handlers/
+│   │   ├── websocket.go
+│   │   └── room.go
+│   ├── models/
+│   │   ├── game.go
+│   │   └── room.go
+│   ├── services/
+│   │   └── redis.go
+│   └── go.mod
+├── docker-compose.yml
+├── Dockerfile
+└── README.md
+```
+
+## 🚀 セットアップ
 
 ### 前提条件
 
-- Node.js 18以上
-- npm / yarn / pnpm
+- Node.js 19+
+- Go 1.25+
+- Redis
+- Docker（オプション）
 
-### インストール
+### ローカル開発
+
+#### バックエンド
 
 ```bash
-# リポジトリのクローン
-git clone https://github.com/IsodaZen/anarchy-reversi.git
-cd anarchy-reversi
+cd backend
+go mod download
+go run main.go
+```
 
-# 依存関係のインストール
+#### フロントエンド
+
+```bash
+cd frontend
 npm install
-
-# 開発サーバーの起動
 npm run dev
 ```
 
-ブラウザで `http://localhost:5173` を開いてください。
-
-### ビルド
+#### Docker使用時
 
 ```bash
-# プロダクションビルド
-npm run build
-
-# ビルド結果のプレビュー
-npm run preview
+docker-compose up
 ```
 
-## 使い方
+## 🎯 開発方針
 
-1. ゲームが開始すると、黒のターンから始まります
-2. 盤面の合法手がハイライトされます
-3. クリックして石を配置します
-4. 相手の石を挟むと、挟んだ石がすべてひっくり返ります
-5. 配置できる場所がない場合は自動的にパスされます
-6. どちらも配置できなくなったらゲーム終了
-7. 石の数が多い方の勝利です
+- 子供が直感的に操作できるUI
+- ルールに縛られない自由な遊び方を許容
+- Goの並行処理を活かした効率的なWebSocket管理
+- シンプルで軽量な実装
+- 使用上限設定で予期しない課金を防ぐ
 
-## リバーシのルール
+## 📚 詳細ドキュメント
 
-### 基本ルール
+開発者向けの詳細な情報は [CLAUDE.md](CLAUDE.md) を参照してください。
 
-- 8×8のボードを使用
-- 黒と白の石を交互に配置
-- 相手の石を挟める場所にのみ配置可能
-- 挟んだ石はすべて自分の色にひっくり返る
-- 配置できる場所がなければパス
-- どちらも配置できなくなったらゲーム終了
-- 石の数が多い方が勝利
-
-### 初期配置
-
-ゲーム開始時、中央の4マスに以下のように配置:
-
-```
-  ○ ●
-  ● ○
-```
-
-## プロジェクト構造
-
-```
-src/
-├── components/       # Reactコンポーネント
-│   ├── Board/       # ゲームボード
-│   ├── Cell/        # 個別のマス
-│   ├── Piece/       # 石の表示
-│   ├── ScoreBoard/  # スコア表示
-│   ├── GameInfo/    # ゲーム情報
-│   └── Controls/    # 操作パネル
-├── hooks/           # カスタムフック
-│   └── useGameState.js
-├── utils/           # ユーティリティ関数
-│   ├── gameLogic.js
-│   ├── validation.js
-│   └── ai.js
-├── constants/       # 定数定義
-└── App.jsx          # ルートコンポーネント
-```
-
-## 開発ロードマップ
-
-### ✅ フェーズ 1: 基本実装
-- [x] プロジェクト初期化
-- [ ] Reactプロジェクトのセットアップ
-- [ ] 基本的なコンポーネント実装
-- [ ] ゲームロジックの実装
-- [ ] UI/UXの基礎
-
-### 🚧 フェーズ 2: UX向上
-- [ ] アニメーション効果
-- [ ] サウンドエフェクト
-- [ ] レスポンシブデザイン
-- [ ] ダークモード
-
-### 📋 フェーズ 3: ゲームモード拡張
-- [ ] AI対戦機能
-- [ ] 難易度選択
-- [ ] 対戦履歴
-- [ ] リプレイ機能
-
-### 🌐 フェーズ 4: オンライン機能
-- [ ] バックエンドAPI
-- [ ] ユーザー認証
-- [ ] オンライン対戦
-- [ ] ランキング
-
-## 技術スタック
-
-- **フロントエンド**: React 18+, Vite
-- **スタイリング**: CSS Modules
-- **状態管理**: React Hooks (useState, useReducer, Context API)
-- **開発ツール**: ESLint, Prettier
-- **テスト**: Vitest, React Testing Library (予定)
-
-## コントリビューション
-
-プルリクエストを歓迎します。大きな変更の場合は、まずIssueで議論してください。
-
-### 開発フロー
-
-1. このリポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+- 実装ロードマップ
+- コーディング規約
+- 状態管理の詳細
+- デプロイ手順
 
 ## ライセンス
 
 MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照
-
-## 詳細ドキュメント
-
-開発者向けの詳細な情報は [CLAUDE.md](CLAUDE.md) を参照してください。
-
-## 作者
-
-IsodaZen
-
-## 謝辞
-
-- Reactコミュニティ
-- Viteチーム
-- リバーシのルール・アルゴリズムに関する参考資料
