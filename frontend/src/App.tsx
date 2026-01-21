@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import GameRoom from './pages/GameRoom';
-import './App.css';
 
 function App() {
   return (
