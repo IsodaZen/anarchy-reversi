@@ -1,13 +1,13 @@
 {
   "feature_name": "anarchy-reversi-core",
   "created_at": "2026-02-06T00:00:00.000Z",
-  "updated_at": "2026-02-07T00:00:00.000Z",
+  "updated_at": "2026-02-08T00:00:00.000Z",
   "language": "ja",
-  "phase": "requirements-generated",
+  "phase": "requirements-approved",
   "approvals": {
     "requirements": {
       "generated": true,
-      "approved": false
+      "approved": true
     },
     "design": {
       "generated": false,
