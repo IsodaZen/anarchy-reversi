@@ -1,23 +1,29 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { setRoom } from '../store/gameSlice';
+import { setRoom, placePiece, flipPiece, endTurn, resetGame } from '../store/gameSlice';
+import { getValidMoves, isValidMove } from '../utils/gameLogic';
+import { Board } from '../components/Board/Board';
+import { ScoreBoard } from '../components/ScoreBoard/ScoreBoard';
+import { GameInfo } from '../components/GameInfo/GameInfo';
 
 export default function GameRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isConnected, score } = useAppSelector((state) => state.game);
+  const { board, score, currentTurn, phase, isConnected } = useAppSelector(
+    (state) => state.game,
+  );
+
+  const validMoves = getValidMoves(board, currentTurn);
 
   useEffect(() => {
     if (!roomId) {
-      // ルームIDがない場合はホームへ
       navigate('/');
       return;
     }
 
     // TODO: WebSocket接続を確立
-    // 仮のプレイヤーIDを生成
     const playerId = Math.random().toString(36).substring(2, 15);
     dispatch(setRoom({ roomId, playerId }));
 
@@ -26,15 +32,37 @@ export default function GameRoom() {
     };
   }, [roomId, navigate, dispatch]);
 
+  const handleCellClick = useCallback(
+    (row: number, col: number) => {
+      if (phase === 'placement') {
+        if (isValidMove(board, row, col, currentTurn)) {
+          dispatch(placePiece({ row, col }));
+        }
+      } else if (phase === 'flipping') {
+        const opponent = currentTurn === 'black' ? 'white' : 'black';
+        if (board[row][col] === opponent) {
+          dispatch(flipPiece({ row, col }));
+        }
+      }
+    },
+    [board, currentTurn, phase, dispatch],
+  );
+
+  const handleEndTurn = useCallback(() => {
+    dispatch(endTurn());
+  }, [dispatch]);
+
+  const handleReset = useCallback(() => {
+    dispatch(resetGame());
+  }, [dispatch]);
+
   const handleLeaveRoom = () => {
-    // TODO: WebSocket切断
     navigate('/');
   };
 
   const copyRoomId = () => {
     if (roomId) {
       navigator.clipboard.writeText(roomId);
-      // TODO: コピー成功のトースト表示
     }
   };
 
@@ -59,7 +87,7 @@ export default function GameRoom() {
                   onClick={copyRoomId}
                   className="text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
                 >
-                  📋 コピー
+                  コピー
                 </button>
               </div>
             </div>
@@ -76,14 +104,13 @@ export default function GameRoom() {
           {/* ゲームボードエリア */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6">
-              <div className="aspect-square max-w-2xl mx-auto">
-                {/* TODO: ゲームボードコンポーネントを配置 */}
-                <div className="w-full h-full bg-green-600 rounded-lg flex items-center justify-center">
-                  <p className="text-white text-2xl font-semibold">
-                    ゲームボード（準備中）
-                  </p>
-                </div>
-              </div>
+              <Board
+                board={board}
+                validMoves={validMoves}
+                phase={phase}
+                currentTurn={currentTurn}
+                onCellClick={handleCellClick}
+              />
             </div>
           </div>
 
@@ -111,28 +138,23 @@ export default function GameRoom() {
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 スコア
               </h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-black rounded-full border-2 border-white" />
-                    <span className="text-white font-semibold">黒</span>
-                  </div>
-                  <span className="text-2xl font-bold text-white">
-                    {score.black}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-white rounded-full border-2 border-gray-900" />
-                    <span className="text-gray-900 dark:text-white font-semibold">
-                      白
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {score.white}
-                  </span>
-                </div>
-              </div>
+              <ScoreBoard
+                blackCount={score.black}
+                whiteCount={score.white}
+                currentTurn={currentTurn}
+              />
+            </div>
+
+            {/* ゲーム情報 */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                ゲーム情報
+              </h2>
+              <GameInfo
+                currentTurn={currentTurn}
+                phase={phase}
+                onEndTurn={handleEndTurn}
+              />
             </div>
 
             {/* コントロール */}
@@ -140,22 +162,24 @@ export default function GameRoom() {
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 コントロール
               </h2>
-              <div className="space-y-2">
-                <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
-                  リセット
-                </button>
-              </div>
+              <button
+                onClick={handleReset}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+              >
+                リセット
+              </button>
             </div>
 
             {/* 説明 */}
             <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-xl p-5">
               <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-2">
-                💡 遊び方
+                遊び方
               </h3>
               <ul className="text-xs text-indigo-800 dark:text-indigo-200 space-y-1">
-                <li>• マスをクリックして石を自由に操作</li>
-                <li>• 黒 → 白 → 空 の順に切り替わります</li>
-                <li>• ルールに縛られず自由に遊べます！</li>
+                <li>1. 合法手（ドット表示）に石を配置</li>
+                <li>2. 相手の石をクリックして自由に裏返し</li>
+                <li>3. 「手番終了」で相手に交代</li>
+                <li>裏返しの回数に制限なし！</li>
               </ul>
             </div>
           </div>

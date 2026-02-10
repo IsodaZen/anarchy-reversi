@@ -1,53 +1,51 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GameState, Board, CellState } from '../types/game';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { GameState, Board, Position } from '../types/game';
+import { createInitialBoard, calculateScore, hasValidMoves } from '../utils/gameLogic';
 
-// 初期盤面を作成（8x8の空ボード）
-const createInitialBoard = (): Board => {
-  return Array(8).fill(null).map(() => Array(8).fill(null));
-};
+const initialBoard = createInitialBoard();
 
 const initialState: GameState = {
-  board: createInitialBoard(),
-  score: { black: 0, white: 0 },
+  board: initialBoard,
+  score: calculateScore(initialBoard),
+  currentTurn: 'black',
+  phase: 'placement',
   roomId: null,
   playerId: null,
   isConnected: false,
-};
-
-// スコアを計算するヘルパー関数
-const calculateScore = (board: Board): { black: number; white: number } => {
-  let black = 0;
-  let white = 0;
-
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      if (board[row][col] === 'black') black++;
-      if (board[row][col] === 'white') white++;
-    }
-  }
-
-  return { black, white };
 };
 
 const gameSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    // セルの状態を切り替え（黒 → 白 → 空 → 黒）
-    toggleCell: (state, action: PayloadAction<{ row: number; col: number }>) => {
+    // 配置フェーズで合法手に石を配置し、裏返しフェーズへ遷移
+    placePiece: (state, action: PayloadAction<Position>) => {
       const { row, col } = action.payload;
-      const current = state.board[row][col];
-
-      if (current === 'black') {
-        state.board[row][col] = 'white';
-      } else if (current === 'white') {
-        state.board[row][col] = null;
-      } else {
-        state.board[row][col] = 'black';
-      }
-
-      // スコアを再計算
+      state.board[row][col] = state.currentTurn;
+      state.phase = 'flipping';
       state.score = calculateScore(state.board);
+    },
+
+    // 裏返しフェーズで相手の石を自分の色に変更
+    flipPiece: (state, action: PayloadAction<Position>) => {
+      const { row, col } = action.payload;
+      state.board[row][col] = state.currentTurn;
+      state.score = calculateScore(state.board);
+    },
+
+    // 手番終了：手番を交代し配置フェーズに戻す（自動パス対応）
+    endTurn: (state) => {
+      const opponent = state.currentTurn === 'black' ? 'white' : 'black';
+
+      if (hasValidMoves(state.board, opponent)) {
+        // 相手に合法手があれば交代
+        state.currentTurn = opponent;
+      } else if (hasValidMoves(state.board, state.currentTurn)) {
+        // 相手に合法手がなく、自分にある場合は自動パス（手番そのまま）
+      }
+      // 両者とも合法手がない場合はそのまま停止
+
+      state.phase = 'placement';
     },
 
     // ボード全体を更新
@@ -58,8 +56,11 @@ const gameSlice = createSlice({
 
     // ゲームをリセット
     resetGame: (state) => {
-      state.board = createInitialBoard();
-      state.score = { black: 0, white: 0 };
+      const board = createInitialBoard();
+      state.board = board;
+      state.score = calculateScore(board);
+      state.currentTurn = 'black';
+      state.phase = 'placement';
     },
 
     // ルーム情報を設定
@@ -78,14 +79,19 @@ const gameSlice = createSlice({
       state.roomId = null;
       state.playerId = null;
       state.isConnected = false;
-      state.board = createInitialBoard();
-      state.score = { black: 0, white: 0 };
+      const board = createInitialBoard();
+      state.board = board;
+      state.score = calculateScore(board);
+      state.currentTurn = 'black';
+      state.phase = 'placement';
     },
   },
 });
 
 export const {
-  toggleCell,
+  placePiece,
+  flipPiece,
+  endTurn,
   updateBoard,
   resetGame,
   setRoom,

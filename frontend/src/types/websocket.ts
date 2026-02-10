@@ -1,6 +1,6 @@
 // WebSocketメッセージの型定義
 
-import { Board, CellState } from './game';
+import type { Board, CellState } from './game';
 
 export type MessageType =
   | 'ROOM_CREATED'
