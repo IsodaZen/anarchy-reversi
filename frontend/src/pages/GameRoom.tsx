@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setRoom, placePiece, flipPiece, endTurn, resetGame } from '../store/gameSlice';
@@ -15,7 +15,7 @@ export default function GameRoom() {
     (state) => state.game,
   );
 
-  const validMoves = getValidMoves(board, currentTurn);
+  const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn]);
 
   useEffect(() => {
     if (!roomId) {
@@ -24,7 +24,7 @@ export default function GameRoom() {
     }
 
     // TODO: WebSocket接続を確立
-    const playerId = Math.random().toString(36).substring(2, 15);
+    const playerId = crypto.randomUUID();
     dispatch(setRoom({ roomId, playerId }));
 
     return () => {
@@ -60,9 +60,13 @@ export default function GameRoom() {
     navigate('/');
   };
 
-  const copyRoomId = () => {
+  const copyRoomId = async () => {
     if (roomId) {
-      navigator.clipboard.writeText(roomId);
+      try {
+        await navigator.clipboard.writeText(roomId);
+      } catch {
+        // クリップボードAPIが使えない場合は無視
+      }
     }
   };
 

@@ -40,9 +40,16 @@ React Frontend ←→ Go Backend ←→ Redis
 - Prettier（ESLint経由）
 - React Hooks lint rules
 
-### Testing (計画)
-- Vitest: ユニットテスト
-- Playwright: E2Eテスト
+### Testing
+- **Vitest + React Testing Library + jsdom**: ユニット/コンポーネントテスト（導入済み）
+- **Playwright**: E2Eテスト（計画）
+- テストファイルはソースと同一ディレクトリに `*.test.tsx` / `*.test.ts` で配置
+
+### Accessibility
+- インタラクティブ要素に `role`, `tabIndex`, `aria-label` を設定
+- キーボード操作（Enter/Space）のサポート
+- 最低44x44pxのタッチターゲット
+- フォーカスインジケーター（`focus:outline`）
 
 ## Development Environment
 
@@ -57,6 +64,9 @@ React Frontend ←→ Go Backend ←→ Redis
 # Dev: npm run dev
 # Build: npm run build
 # Lint: npm run lint
+# Test: npm run test
+# Test (watch): npm run test:watch
+# Type check: npx tsc --noEmit --project tsconfig.app.json
 ```
 
 ## Key Technical Decisions

@@ -48,4 +48,20 @@ describe('Board', () => {
     const pieces = screen.getAllByTestId('piece');
     expect(pieces).toHaveLength(4);
   });
+
+  it('role="grid"とaria-labelを持つ', () => {
+    const board = createInitialBoard();
+    render(
+      <Board
+        board={board}
+        validMoves={[]}
+        phase="placement"
+        currentTurn="black"
+        onCellClick={vi.fn()}
+      />,
+    );
+    const boardElement = screen.getByTestId('board');
+    expect(boardElement).toHaveAttribute('role', 'grid');
+    expect(boardElement).toHaveAttribute('aria-label', 'リバーシ盤面');
+  });
 });
