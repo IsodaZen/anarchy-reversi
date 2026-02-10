@@ -20,9 +20,15 @@
 **Purpose**: 共有型定義
 **Example**: `game.ts`, `websocket.ts`
 
-### Components (`frontend/src/components/`) ※計画
+### Components (`frontend/src/components/`)
 **Purpose**: 再利用可能なUIコンポーネント
-**Pattern**: 機能名/`ComponentName.tsx` + `ComponentName.module.css`
+**Pattern**: `ComponentName/ComponentName.tsx` + `ComponentName.test.tsx`
+**Examples**: `Board/Board.tsx`, `Cell/Cell.tsx`, `Piece/Piece.tsx`, `ScoreBoard/ScoreBoard.tsx`, `GameInfo/GameInfo.tsx`
+
+### Utils (`frontend/src/utils/`)
+**Purpose**: 純粋関数のユーティリティ（ゲームロジック等）
+**Pattern**: `featureLogic.ts` + `featureLogic.test.ts`
+**Example**: `gameLogic.ts` — `createInitialBoard`, `isValidMove`, `getValidMoves`
 
 ### Hooks (`frontend/src/hooks/`) ※計画
 **Purpose**: カスタムフック
@@ -56,7 +62,8 @@ import type { GameState } from '../types/game';
 
 ## Code Organization Principles
 
-- **1ファイル1エクスポート**: ページ・コンポーネントは1つのdefault export
+- **名前付きエクスポート**: コンポーネントは `export function ComponentName` で名前付きエクスポート
+- **ページのdefault export**: ページコンポーネントのみ `export default`
 - **Sliceパターン**: Redux Toolkitの`createSlice`でアクション+リデューサーを集約
 - **Typed Hooks**: `useAppSelector`/`useAppDispatch`で型安全なRedux操作
 - **コロケーション**: 関連ファイルは同じディレクトリに配置

@@ -2,10 +2,19 @@
 
 export type CellState = 'black' | 'white' | null;
 export type Board = CellState[][];
+export type PlayerColor = 'black' | 'white';
+export type GamePhase = 'placement' | 'flipping';
+
+export interface Position {
+  row: number;
+  col: number;
+}
 
 export interface GameState {
   board: Board;
   score: { black: number; white: number };
+  currentTurn: PlayerColor;
+  phase: GamePhase;
   roomId: string | null;
   playerId: string | null;
   isConnected: boolean;
