@@ -179,11 +179,11 @@ export default function GameRoom() {
               <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-2">
                 遊び方
               </h3>
-              <ul className="text-xs text-indigo-800 dark:text-indigo-200 space-y-1">
-                <li>1. 合法手（ドット表示）に石を配置</li>
-                <li>2. 相手の石をクリックして自由に裏返し</li>
-                <li>3. 「手番終了」で相手に交代</li>
-                <li>裏返しの回数に制限なし！</li>
+              <ul className="text-sm text-indigo-800 dark:text-indigo-200 space-y-2">
+                <li>1. まるいしるしが出ているところに石をおこう！</li>
+                <li>2. あいての石をタップしてひっくり返せるよ！</li>
+                <li>3.「手番終了」ボタンをおしたら交代だよ</li>
+                <li>何回でもひっくり返してOK！</li>
               </ul>
             </div>
           </div>

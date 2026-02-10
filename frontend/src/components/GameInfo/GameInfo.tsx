@@ -8,7 +8,7 @@ interface GameInfoProps {
 
 export function GameInfo({ currentTurn, phase, onEndTurn }: GameInfoProps) {
   const turnLabel = currentTurn === 'black' ? '黒' : '白';
-  const phaseLabel = phase === 'placement' ? '配置中' : '裏返し中';
+  const phaseLabel = phase === 'placement' ? '石をおこう！' : 'ひっくり返せるよ！';
 
   return (
     <div className="flex flex-col gap-3">

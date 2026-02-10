@@ -15,12 +15,12 @@ describe('GameInfo', () => {
 
   it('配置フェーズを表示する', () => {
     render(<GameInfo currentTurn="black" phase="placement" onEndTurn={vi.fn()} />);
-    expect(screen.getByText(/配置中/)).toBeInTheDocument();
+    expect(screen.getByText(/石をおこう/)).toBeInTheDocument();
   });
 
   it('裏返しフェーズを表示する', () => {
     render(<GameInfo currentTurn="black" phase="flipping" onEndTurn={vi.fn()} />);
-    expect(screen.getByText(/裏返し中/)).toBeInTheDocument();
+    expect(screen.getByText(/ひっくり返せるよ/)).toBeInTheDocument();
   });
 
   it('裏返しフェーズで手番終了ボタンが有効', () => {
