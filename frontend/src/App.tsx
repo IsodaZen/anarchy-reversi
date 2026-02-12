@@ -4,7 +4,7 @@ import GameRoom from './pages/GameRoom';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/room/:roomId" element={<GameRoom />} />
