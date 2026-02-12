@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect
+      // Stores the current path in sessionStorage and redirects to the base URL
+      // so that index.html can restore the route for React Router.
+      var basePath = '/anarchy-reversi/';
+      var pathAfterBase = location.pathname.slice(basePath.length);
+      var query = location.search;
+      sessionStorage.setItem('spa-redirect', pathAfterBase + query);
+      location.replace(basePath);
+    </script>
+  </head>
+  <body></body>
+</html>
