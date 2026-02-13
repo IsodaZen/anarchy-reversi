@@ -92,6 +92,12 @@ export default function GameRoom() {
                 遊び方
               </button>
               <button
+                onClick={handleReset}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+              >
+                リセット
+              </button>
+              <button
                 onClick={handleLeaveRoom}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
               >
@@ -141,19 +147,13 @@ export default function GameRoom() {
             </div>
 
             {/* モバイル: アクションボタン（ボード直下） */}
-            <div className="mt-3 flex gap-3 lg:hidden">
+            <div className="mt-3 lg:hidden">
               <button
                 onClick={handleEndTurn}
                 disabled={phase === 'placement'}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
+                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
               >
                 手番終了
-              </button>
-              <button
-                onClick={handleReset}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-              >
-                リセット
               </button>
             </div>
           </div>
