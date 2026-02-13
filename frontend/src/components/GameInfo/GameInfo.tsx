@@ -20,8 +20,8 @@ export function GameInfo({ currentTurn, phase, onEndTurn }: GameInfoProps) {
               : 'bg-white border-2 border-gray-300'
           }`}
         />
-        <span className="text-lg font-bold">{turnLabel}の番</span>
-        <span className="text-sm text-gray-500">({phaseLabel})</span>
+        <span className="text-lg font-bold text-gray-900 dark:text-white">{turnLabel}の番</span>
+        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">({phaseLabel})</span>
       </div>
       <button
         onClick={onEndTurn}
