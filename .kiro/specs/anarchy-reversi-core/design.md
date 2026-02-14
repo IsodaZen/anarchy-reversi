@@ -17,7 +17,7 @@
 ### Non-Goals
 - オンライン対戦（WebSocket通信） — 後続フェーズで実装
 - ゲーム終了判定・勝敗表示 — 要件範囲外
-- アニメーション・サウンドエフェクト — フェーズ2で実装
+- サウンドエフェクト — フェーズ2で実装
 - 観戦・チャット機能 — フェーズ3で実装
 - バックエンド（Go + Redis）実装 — 後続フェーズで実装
 
@@ -97,12 +97,15 @@ stateDiagram-v2
     Placement --> Placement: 合法手なし - 自動パス - 手番交代
 
     Flipping --> Flipping: 相手の石を裏返す
-    Flipping --> Placement: 手番終了 - 手番交代
+    Flipping --> Flipping: 裏返し済みの石を元に戻す（アンフリップ）
+    Flipping --> Placement: 手番終了（1個以上裏返し済み） - 手番交代
 ```
 
 **Key Decisions**:
 - 配置フェーズでは標準リバーシの挟み判定で合法手を決定
 - 裏返しフェーズでは回数・対象の制限なし（アナーキー要素）
+- 裏返し済みの石を再クリックすると元の色に戻せる（アンフリップ）
+- 「手番終了」ボタンは裏返しフェーズかつ1個以上の石を裏返した場合のみ有効化
 - 合法手がない場合は自動パスし、相手の配置フェーズへ遷移
 - 両プレイヤーとも合法手がない場合、パスを1回実行し手番を切り替えた状態で停止（ループ防止）
 - 手番終了は明示的なボタン操作が必要
@@ -122,10 +125,14 @@ sequenceDiagram
         L-->>C: true
         C->>S: placePiece dispatch
         S->>S: 石配置 + phase を flipping に変更 + score再計算
-    else Flipping Phase
+    else Flipping Phase - フリップ
         P->>C: 相手の石をクリック
         C->>S: flipPiece dispatch
-        S->>S: 石裏返し + score再計算
+        S->>S: 石裏返し + flippedCellsに追加 + flipCount増加 + score再計算
+    else Flipping Phase - アンフリップ
+        P->>C: 裏返し済みの石をクリック
+        C->>S: flipPiece dispatch
+        S->>S: 石を元の色に戻す + flippedCellsから削除 + flipCount減少 + score再計算
     else End Turn
         P->>S: endTurn dispatch
         S->>L: hasValidMoves確認
@@ -150,10 +157,13 @@ sequenceDiagram
 | 2.5 | 石の配置 | gameSlice | placePiece | 配置フェーズ |
 | 2.6 | 裏返しフェーズ遷移 | gameSlice | GameState.phase | ターン遷移 |
 | 2.7 | 手動裏返し | gameSlice | flipPiece | 裏返しフェーズ |
-| 2.8 | 裏返し無制限 | gameSlice | - | 裏返しフェーズ |
-| 2.9 | 手番終了ボタン | GameInfo | GameInfoProps.onEndTurn | ターン遷移 |
-| 2.10 | 自動パス | gameSlice, gameLogic | hasValidMoves | ターン遷移 |
-| 2.11 | 操作時の視覚フィードバック | Cell | CellProps | - |
+| 2.8 | アンフリップ（裏返し済みの石を元に戻す） | gameSlice, Board, Cell | flipPiece, flippedCells | 裏返しフェーズ |
+| 2.9 | 裏返し無制限 | gameSlice | - | 裏返しフェーズ |
+| 2.10 | 手番終了ボタン活性化（flipCount >= 1） | GameInfo | GameInfoProps.flipCount | ターン遷移 |
+| 2.11 | 手番終了ボタン非活性（flipCount == 0） | GameInfo | GameInfoProps.flipCount | ターン遷移 |
+| 2.12 | 手番終了ボタン | GameInfo | GameInfoProps.onEndTurn | ターン遷移 |
+| 2.13 | 自動パス | gameSlice, gameLogic | hasValidMoves | ターン遷移 |
+| 2.14 | 操作時の視覚フィードバック | Cell | CellProps | - |
 | 3.1 | スコア常時表示 | ScoreBoard | ScoreBoardProps | - |
 | 3.2 | スコア即時更新 | gameSlice | calculateScore | - |
 | 3.3 | スコア視覚区別 | ScoreBoard | ScoreBoardProps | - |
@@ -202,12 +212,18 @@ interface BoardProps {
   validMoves: Position[];
   phase: GamePhase;
   currentTurn: PlayerColor;
+  flippingCells: Position[];
+  flippedCells: Position[];
   onCellClick: (row: number, col: number) => void;
+  onFlipEnd: (row: number, col: number) => void;
 }
 ```
 
 **Implementation Notes**
-- `validMoves`と`phase`から各セルの`isValidMove`/`isFlippable`をBoard内で計算してCellに渡す
+- `validMoves`と`phase`から各セルの`isValidMove`をBoard内で計算してCellに渡す
+- `flippedCells`と`phase`から各セルのアンフリップ可能判定（`isFlippable`）を計算してCellに渡す
+- `flippingCells`はアニメーション表示用（アニメーション完了後に`clearFlipping`でクリア）
+- `flippedCells`はロジック用（ターン中の裏返し済みセル追跡、手番終了までクリアされない）
 - Tailwind CSSの`grid grid-cols-8`で8列グリッドを構成
 - 既存GameRoomの`aspect-square max-w-2xl mx-auto`コンテナ内に配置
 
@@ -242,8 +258,8 @@ interface CellProps {
 
 **Implementation Notes**
 - `isValidMove`がtrueの場合、半透明の石またはドットでインジケータ表示
-- `isFlippable`がtrueの場合、ホバー時にカーソル変更やハイライトで裏返し可能であることを示す
-- 無効な操作（配置フェーズで合法手でない位置、裏返しフェーズで自分の石など）のクリックは`onClick`を呼ばない
+- `isFlippable`がtrueの場合、ホバー時にカーソル変更やハイライトで裏返し可能であることを示す（相手の石の裏返しと裏返し済みの石のアンフリップの両方を含む）
+- 無効な操作（配置フェーズで合法手でない位置、裏返しフェーズで空きセルなど）のクリックは`onClick`を呼ばない
 
 #### Piece
 
@@ -272,7 +288,7 @@ interface PieceProps {
 **Responsibilities & Constraints**
 - 現在の手番（黒番・白番）を色付きインジケータで表示
 - 現在のフェーズ（「配置中」「裏返し中」）をテキストで表示
-- 「手番終了」ボタンは裏返しフェーズ中のみ有効化（配置フェーズでは無効化）
+- 「手番終了」ボタンは裏返しフェーズ中かつ`flipCount >= 1`の場合のみ有効化
 
 **Dependencies**
 - Inbound: GameRoom — 表示の親 (P0)
@@ -283,6 +299,7 @@ interface PieceProps {
 interface GameInfoProps {
   currentTurn: PlayerColor;
   phase: GamePhase;
+  flipCount: number;
   onEndTurn: () => void;
 }
 ```
@@ -326,7 +343,7 @@ interface ScoreBoardProps {
 **Responsibilities & Constraints**
 - 盤面状態、手番、フェーズ、スコアの一元管理
 - `placePiece`: 指定位置に手番の色の石を配置し、フェーズを`flipping`に遷移
-- `flipPiece`: 指定位置の相手の石を手番の色に変更
+- `flipPiece`: 指定位置の相手の石を手番の色に変更、または裏返し済みの石を元の色に戻す（アンフリップ）
 - `endTurn`: 手番を切り替え、次の手番に合法手がない場合は自動パス
 - `resetGame`: 全状態を初期状態（中央4マス配置、黒番、配置フェーズ）にリセット
 - 各アクション後にスコアを自動再計算
@@ -353,12 +370,13 @@ interface GameSliceReducers {
 ```
 
 - Preconditions (placePiece): `phase === 'placement'`、指定位置が`getValidMoves`の結果に含まれる
-- Preconditions (flipPiece): `phase === 'flipping'`、指定位置に相手の色の石がある
-- Preconditions (endTurn): `phase === 'flipping'`
+- Preconditions (flipPiece): `phase === 'flipping'`、指定位置に相手の色の石がある、または`flippedCells`に含まれる裏返し済みの石
+- Preconditions (endTurn): `phase === 'flipping'`、`flipCount >= 1`
 - Postconditions (placePiece): 石が配置、`phase`が`'flipping'`に変更、スコア再計算
-- Postconditions (flipPiece): 石が裏返し、スコア再計算
-- Postconditions (endTurn): `currentTurn`が切り替わり、`phase`が`'placement'`に変更。次の手番に合法手がなく、元の手番に合法手がある場合、再度`currentTurn`を切り替え（自動パス）
-- Postconditions (resetGame): 初期盤面（中央4マス配置）、黒番、`placement`フェーズ、初期スコア
+- Postconditions (flipPiece - フリップ): 石が裏返し、`flippedCells`に追加、`flipCount`増加、スコア再計算
+- Postconditions (flipPiece - アンフリップ): 石が元の色に戻り、`flippedCells`から削除、`flipCount`減少、スコア再計算
+- Postconditions (endTurn): `currentTurn`が切り替わり、`phase`が`'placement'`に変更、`flippedCells`/`flippingCells`クリア、`flipCount`リセット。次の手番に合法手がなく、元の手番に合法手がある場合、再度`currentTurn`を切り替え（自動パス）
+- Postconditions (resetGame): 初期盤面（中央4マス配置）、黒番、`placement`フェーズ、初期スコア、`flippedCells`/`flippingCells`空、`flipCount`=0
 - Invariants: スコアは常に盤面から正確に導出される
 
 ##### State Management
@@ -377,6 +395,9 @@ interface GameState {
   score: { black: number; white: number };
   currentTurn: PlayerColor;
   phase: GamePhase;
+  flippingCells: Position[];   // アニメーション表示用（完了後にクリア）
+  flippedCells: Position[];    // ターン中の裏返し済みセル追跡用（手番終了までクリアされない）
+  flipCount: number;           // 裏返し回数（手番終了ボタンの活性化判定に使用）
   roomId: string | null;
   playerId: string | null;
   isConnected: boolean;
@@ -446,6 +467,9 @@ classDiagram
         +Score score
         +PlayerColor currentTurn
         +GamePhase phase
+        +Position[] flippingCells
+        +Position[] flippedCells
+        +number flipCount
     }
 
     class Board {
@@ -507,6 +531,9 @@ classDiagram
 | score | `{ black: 2, white: 2 }` |
 | currentTurn | `'black'` |
 | phase | `'placement'` |
+| flippingCells | `[]` |
+| flippedCells | `[]` |
+| flipCount | `0` |
 | roomId | `null` |
 | playerId | `null` |
 | isConnected | `false` |
@@ -521,8 +548,9 @@ classDiagram
 
 **User Errors（UIバリデーション）**:
 - 配置フェーズで合法手でない位置をクリック → 操作を無視（`onClick`を発火しない）
-- 裏返しフェーズで自分の石または空きセルをクリック → 操作を無視
+- 裏返しフェーズで空きセルまたは配置した自分の石をクリック → 操作を無視（裏返し済みの石はアンフリップ対象のため操作可能）
 - 配置フェーズで「手番終了」ボタンをクリック → ボタンを無効化（`disabled`属性）
+- 裏返しフェーズで裏返し回数が0の時に「手番終了」ボタンをクリック → ボタンを無効化（`disabled`属性）
 
 **Design Principle**: 子供向けUIのため、エラーメッセージは表示しない。無効な操作は静かに無視し、合法手のハイライト表示で正しい操作を誘導する。
 
