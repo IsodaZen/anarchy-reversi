@@ -79,31 +79,26 @@ export default function GameRoom() {
       <div className="container mx-auto px-4 py-4">
         {/* ヘッダー */}
         <header className="mb-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              アナーキーオセロ
-            </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowHowToPlay(true)}
-                className="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors text-sm font-semibold"
-                aria-label="遊び方を表示"
-              >
-                遊び方
-              </button>
-              <button
-                onClick={handleReset}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
-              >
-                リセット
-              </button>
-              <button
-                onClick={handleLeaveRoom}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-              >
-                退出
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowHowToPlay(true)}
+              className="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors text-sm font-semibold"
+              aria-label="遊び方を表示"
+            >
+              遊び方
+            </button>
+            <button
+              onClick={handleReset}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+            >
+              リセット
+            </button>
+            <button
+              onClick={handleLeaveRoom}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              退出
+            </button>
           </div>
         </header>
 
