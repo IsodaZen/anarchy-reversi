@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { setRoom, placePiece, flipPiece, endTurn, resetGame } from '../store/gameSlice';
+import { setRoom, placePiece, flipPiece, clearFlipping, endTurn, resetGame } from '../store/gameSlice';
 import { getValidMoves, isValidMove } from '../utils/gameLogic';
 import { Board } from '../components/Board/Board';
 import { ScoreBoard } from '../components/ScoreBoard/ScoreBoard';
@@ -11,7 +11,7 @@ export default function GameRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { board, score, currentTurn, phase } = useAppSelector(
+  const { board, score, currentTurn, phase, flippingCells } = useAppSelector(
     (state) => state.game,
   );
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -57,6 +57,13 @@ export default function GameRoom() {
       }
     },
     [board, currentTurn, phase, dispatch],
+  );
+
+  const handleFlipEnd = useCallback(
+    (row: number, col: number) => {
+      dispatch(clearFlipping({ row, col }));
+    },
+    [dispatch],
   );
 
   const handleEndTurn = useCallback(() => {
@@ -137,7 +144,9 @@ export default function GameRoom() {
                 validMoves={validMoves}
                 phase={phase}
                 currentTurn={currentTurn}
+                flippingCells={flippingCells}
                 onCellClick={handleCellClick}
+                onFlipEnd={handleFlipEnd}
               />
             </div>
 

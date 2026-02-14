@@ -5,12 +5,15 @@ interface CellProps {
   state: CellState;
   isValidMove: boolean;
   isFlippable: boolean;
+  isFlipping?: boolean;
+  currentTurn?: CellState;
   row: number;
   col: number;
   onClick: () => void;
+  onFlipEnd?: () => void;
 }
 
-export function Cell({ state, isValidMove, isFlippable, row, col, onClick }: CellProps) {
+export function Cell({ state, isValidMove, isFlippable, isFlipping, row, col, onClick, onFlipEnd }: CellProps) {
   const isClickable = isValidMove || isFlippable;
 
   const handleClick = () => {
@@ -29,6 +32,8 @@ export function Cell({ state, isValidMove, isFlippable, row, col, onClick }: Cel
   const stateLabel = state === 'black' ? '黒石' : state === 'white' ? '白石' : '空';
   const actionLabel = isValidMove ? '（配置可能）' : isFlippable ? '（裏返し可能）' : '';
 
+  const flipFromColor = state === 'black' ? 'white' : 'black';
+
   return (
     <div
       data-testid="cell"
@@ -46,7 +51,14 @@ export function Cell({ state, isValidMove, isFlippable, row, col, onClick }: Cel
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      {state && <Piece color={state} />}
+      {state && (
+        <Piece
+          color={state}
+          isFlipping={isFlipping}
+          flipFromColor={isFlipping ? flipFromColor : undefined}
+          onFlipEnd={onFlipEnd}
+        />
+      )}
       {isValidMove && !state && (
         <div
           data-testid="valid-move-indicator"

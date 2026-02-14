@@ -12,7 +12,9 @@ describe('Board', () => {
         validMoves={[]}
         phase="placement"
         currentTurn="black"
+        flippingCells={[]}
         onCellClick={vi.fn()}
+        onFlipEnd={vi.fn()}
       />,
     );
     const cells = screen.getAllByTestId('cell');
@@ -27,7 +29,9 @@ describe('Board', () => {
         validMoves={[]}
         phase="placement"
         currentTurn="black"
+        flippingCells={[]}
         onCellClick={vi.fn()}
+        onFlipEnd={vi.fn()}
       />,
     );
     const boardElement = screen.getByTestId('board');
@@ -42,7 +46,9 @@ describe('Board', () => {
         validMoves={[]}
         phase="placement"
         currentTurn="black"
+        flippingCells={[]}
         onCellClick={vi.fn()}
+        onFlipEnd={vi.fn()}
       />,
     );
     const pieces = screen.getAllByTestId('piece');
@@ -57,7 +63,9 @@ describe('Board', () => {
         validMoves={[]}
         phase="placement"
         currentTurn="black"
+        flippingCells={[]}
         onCellClick={vi.fn()}
+        onFlipEnd={vi.fn()}
       />,
     );
     const boardElement = screen.getByTestId('board');
