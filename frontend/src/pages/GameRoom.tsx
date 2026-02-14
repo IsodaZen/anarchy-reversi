@@ -11,7 +11,7 @@ export default function GameRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { board, score, currentTurn, phase, flippingCells, flipCount } = useAppSelector(
+  const { board, score, currentTurn, phase, flippingCells, flippedCells, flipCount } = useAppSelector(
     (state) => state.game,
   );
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -51,7 +51,7 @@ export default function GameRoom() {
         }
       } else if (phase === 'flipping') {
         const opponent = currentTurn === 'black' ? 'white' : 'black';
-        const isFlipped = flippingCells.some(
+        const isFlipped = flippedCells.some(
           (c) => c.row === row && c.col === col,
         );
         if (board[row][col] === opponent || isFlipped) {
@@ -59,7 +59,7 @@ export default function GameRoom() {
         }
       }
     },
-    [board, currentTurn, phase, flippingCells, dispatch],
+    [board, currentTurn, phase, flippedCells, dispatch],
   );
 
   const handleFlipEnd = useCallback(

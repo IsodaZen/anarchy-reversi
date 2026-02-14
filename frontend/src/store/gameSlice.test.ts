@@ -11,6 +11,7 @@ function createDefaultState(): GameState {
     currentTurn: 'black',
     phase: 'placement',
     flippingCells: [],
+    flippedCells: [],
     flipCount: 0,
     roomId: null,
     playerId: null,
@@ -110,7 +111,7 @@ describe('gameSlice - flipPiece', () => {
     // 裏返し済みの石を再度クリック → 元に戻る
     const afterUnflip = gameReducer(afterFlip, flipPiece({ row: 3, col: 3 }));
     expect(afterUnflip.board[3][3]).toBe('white');
-    expect(afterUnflip.flippingCells).not.toContainEqual({ row: 3, col: 3 });
+    expect(afterUnflip.flippedCells).not.toContainEqual({ row: 3, col: 3 });
   });
 
   it('裏返し回数がflipCountで追跡される', () => {
@@ -162,6 +163,7 @@ describe('gameSlice - endTurn', () => {
       currentTurn: 'black',
       phase: 'flipping',
       flippingCells: [],
+      flippedCells: [],
       flipCount: 0,
       roomId: null,
       playerId: null,

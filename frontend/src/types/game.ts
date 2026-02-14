@@ -16,6 +16,7 @@ export interface GameState {
   currentTurn: PlayerColor;
   phase: GamePhase;
   flippingCells: Position[];
+  flippedCells: Position[];
   flipCount: number;
   roomId: string | null;
   playerId: string | null;

@@ -10,6 +10,7 @@ const initialState: GameState = {
   currentTurn: 'black',
   phase: 'placement',
   flippingCells: [],
+  flippedCells: [],
   flipCount: 0,
   roomId: null,
   playerId: null,
@@ -32,14 +33,14 @@ const gameSlice = createSlice({
     flipPiece: (state, action: PayloadAction<Position>) => {
       const { row, col } = action.payload;
       const opponent = state.currentTurn === 'black' ? 'white' : 'black';
-      const isUnflip = state.flippingCells.some(
+      const isUnflip = state.flippedCells.some(
         (c) => c.row === row && c.col === col,
       );
 
       if (isUnflip) {
         // アンフリップ: 裏返し済みの石を元に戻す
         state.board[row][col] = opponent;
-        state.flippingCells = state.flippingCells.filter(
+        state.flippedCells = state.flippedCells.filter(
           (c) => c.row !== row || c.col !== col,
         );
         state.flipCount -= 1;
@@ -47,6 +48,7 @@ const gameSlice = createSlice({
         // 通常フリップ: 相手の石を自分の色に裏返す
         state.board[row][col] = state.currentTurn;
         state.flippingCells.push({ row, col });
+        state.flippedCells.push({ row, col });
         state.flipCount += 1;
       }
       state.score = calculateScore(state.board);
@@ -74,6 +76,7 @@ const gameSlice = createSlice({
 
       state.phase = 'placement';
       state.flippingCells = [];
+      state.flippedCells = [];
       state.flipCount = 0;
     },
 
@@ -91,6 +94,7 @@ const gameSlice = createSlice({
       state.currentTurn = 'black';
       state.phase = 'placement';
       state.flippingCells = [];
+      state.flippedCells = [];
       state.flipCount = 0;
     },
 
@@ -116,6 +120,7 @@ const gameSlice = createSlice({
       state.currentTurn = 'black';
       state.phase = 'placement';
       state.flippingCells = [];
+      state.flippedCells = [];
       state.flipCount = 0;
     },
   },
