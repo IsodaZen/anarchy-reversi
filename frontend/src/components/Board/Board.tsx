@@ -7,13 +7,19 @@ interface BoardProps {
   validMoves: Position[];
   phase: GamePhase;
   currentTurn: PlayerColor;
+  flippingCells: Position[];
   onCellClick: (row: number, col: number) => void;
+  onFlipEnd: (row: number, col: number) => void;
 }
 
-export function Board({ board, validMoves, phase, currentTurn, onCellClick }: BoardProps) {
+export function Board({ board, validMoves, phase, currentTurn, flippingCells, onCellClick, onFlipEnd }: BoardProps) {
   const validMoveSet = useMemo(
     () => new Set(validMoves.map((m) => `${m.row},${m.col}`)),
     [validMoves],
+  );
+  const flippingSet = useMemo(
+    () => new Set(flippingCells.map((c) => `${c.row},${c.col}`)),
+    [flippingCells],
   );
   const opponent = currentTurn === 'black' ? 'white' : 'black';
 
@@ -28,6 +34,7 @@ export function Board({ board, validMoves, phase, currentTurn, onCellClick }: Bo
         row.map((cell, colIdx) => {
           const isValidMove = phase === 'placement' && validMoveSet.has(`${rowIdx},${colIdx}`);
           const isFlippable = phase === 'flipping' && cell === opponent;
+          const isFlipping = flippingSet.has(`${rowIdx},${colIdx}`);
 
           return (
             <Cell
@@ -35,9 +42,12 @@ export function Board({ board, validMoves, phase, currentTurn, onCellClick }: Bo
               state={cell}
               isValidMove={isValidMove}
               isFlippable={isFlippable}
+              isFlipping={isFlipping}
+              currentTurn={currentTurn}
               row={rowIdx}
               col={colIdx}
               onClick={() => onCellClick(rowIdx, colIdx)}
+              onFlipEnd={() => onFlipEnd(rowIdx, colIdx)}
             />
           );
         }),

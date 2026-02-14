@@ -15,6 +15,7 @@ export interface GameState {
   score: { black: number; white: number };
   currentTurn: PlayerColor;
   phase: GamePhase;
+  flippingCells: Position[];
   roomId: string | null;
   playerId: string | null;
   isConnected: boolean;

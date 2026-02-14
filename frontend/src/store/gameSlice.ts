@@ -9,6 +9,7 @@ const initialState: GameState = {
   score: calculateScore(initialBoard),
   currentTurn: 'black',
   phase: 'placement',
+  flippingCells: [],
   roomId: null,
   playerId: null,
   isConnected: false,
@@ -30,7 +31,16 @@ const gameSlice = createSlice({
     flipPiece: (state, action: PayloadAction<Position>) => {
       const { row, col } = action.payload;
       state.board[row][col] = state.currentTurn;
+      state.flippingCells.push({ row, col });
       state.score = calculateScore(state.board);
+    },
+
+    // フリップアニメーション完了後にクリア
+    clearFlipping: (state, action: PayloadAction<Position>) => {
+      const { row, col } = action.payload;
+      state.flippingCells = state.flippingCells.filter(
+        (c) => c.row !== row || c.col !== col,
+      );
     },
 
     // 手番終了：手番を交代し配置フェーズに戻す（自動パス対応）
@@ -46,6 +56,7 @@ const gameSlice = createSlice({
       // 両者とも合法手がない場合はそのまま停止
 
       state.phase = 'placement';
+      state.flippingCells = [];
     },
 
     // ボード全体を更新
@@ -61,6 +72,7 @@ const gameSlice = createSlice({
       state.score = calculateScore(board);
       state.currentTurn = 'black';
       state.phase = 'placement';
+      state.flippingCells = [];
     },
 
     // ルーム情報を設定
@@ -84,6 +96,7 @@ const gameSlice = createSlice({
       state.score = calculateScore(board);
       state.currentTurn = 'black';
       state.phase = 'placement';
+      state.flippingCells = [];
     },
   },
 });
@@ -91,6 +104,7 @@ const gameSlice = createSlice({
 export const {
   placePiece,
   flipPiece,
+  clearFlipping,
   endTurn,
   updateBoard,
   resetGame,
