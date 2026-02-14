@@ -148,6 +148,7 @@ export default function GameRoom() {
                 phase={phase}
                 currentTurn={currentTurn}
                 flippingCells={flippingCells}
+                flippedCells={flippedCells}
                 onCellClick={handleCellClick}
                 onFlipEnd={handleFlipEnd}
               />
