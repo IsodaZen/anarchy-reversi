@@ -13,6 +13,7 @@ describe('Board', () => {
         phase="placement"
         currentTurn="black"
         flippingCells={[]}
+        flippedCells={[]}
         onCellClick={vi.fn()}
         onFlipEnd={vi.fn()}
       />,
@@ -30,6 +31,7 @@ describe('Board', () => {
         phase="placement"
         currentTurn="black"
         flippingCells={[]}
+        flippedCells={[]}
         onCellClick={vi.fn()}
         onFlipEnd={vi.fn()}
       />,
@@ -47,6 +49,7 @@ describe('Board', () => {
         phase="placement"
         currentTurn="black"
         flippingCells={[]}
+        flippedCells={[]}
         onCellClick={vi.fn()}
         onFlipEnd={vi.fn()}
       />,
@@ -64,6 +67,7 @@ describe('Board', () => {
         phase="placement"
         currentTurn="black"
         flippingCells={[]}
+        flippedCells={[]}
         onCellClick={vi.fn()}
         onFlipEnd={vi.fn()}
       />,

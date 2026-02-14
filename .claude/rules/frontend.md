@@ -10,6 +10,11 @@
 - 計算コストのある派生値は `useMemo` でメモ化（例: `getValidMoves` の結果）
 - ブラウザAPI（`navigator.clipboard`, `crypto.randomUUID`）は try/catch でエラーハンドリング
 
+## Redux 状態設計
+- アニメーション用の一時状態とロジック用の永続状態は別フィールドに分離する
+  - 例: `flippingCells`（アニメーション完了後にクリア） vs `flippedCells`（ターン終了までクリアされない）
+  - アニメーションコールバックで状態をクリアする場合、同じフィールドをロジック判定に使うと不整合が起きる
+
 ## アクセシビリティ
 - インタラクティブ要素に `role="button"`, `tabIndex={0}`, `aria-label` を設定
 - キーボード操作: Enter/Spaceキーでクリック相当の操作を可能にする

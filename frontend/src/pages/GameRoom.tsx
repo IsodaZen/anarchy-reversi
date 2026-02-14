@@ -11,7 +11,7 @@ export default function GameRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { board, score, currentTurn, phase, flippingCells } = useAppSelector(
+  const { board, score, currentTurn, phase, flippingCells, flippedCells, flipCount } = useAppSelector(
     (state) => state.game,
   );
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -51,12 +51,15 @@ export default function GameRoom() {
         }
       } else if (phase === 'flipping') {
         const opponent = currentTurn === 'black' ? 'white' : 'black';
-        if (board[row][col] === opponent) {
+        const isFlipped = flippedCells.some(
+          (c) => c.row === row && c.col === col,
+        );
+        if (board[row][col] === opponent || isFlipped) {
           dispatch(flipPiece({ row, col }));
         }
       }
     },
-    [board, currentTurn, phase, dispatch],
+    [board, currentTurn, phase, flippedCells, dispatch],
   );
 
   const handleFlipEnd = useCallback(
@@ -145,6 +148,7 @@ export default function GameRoom() {
                 phase={phase}
                 currentTurn={currentTurn}
                 flippingCells={flippingCells}
+                flippedCells={flippedCells}
                 onCellClick={handleCellClick}
                 onFlipEnd={handleFlipEnd}
               />
@@ -154,7 +158,7 @@ export default function GameRoom() {
             <div className="mt-3 lg:hidden">
               <button
                 onClick={handleEndTurn}
-                disabled={phase === 'placement'}
+                disabled={phase === 'placement' || flipCount < 1}
                 className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
               >
                 手番終了
@@ -184,6 +188,7 @@ export default function GameRoom() {
               <GameInfo
                 currentTurn={currentTurn}
                 phase={phase}
+                flipCount={flipCount}
                 onEndTurn={handleEndTurn}
               />
             </div>

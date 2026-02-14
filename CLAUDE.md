@@ -13,6 +13,7 @@
 - `.kiro/steering/product.md` — プロダクト概要、コアコンセプト、ユースケース
 - `.kiro/steering/tech.md` — 技術スタック、キーライブラリ、開発コマンド
 - `.kiro/steering/structure.md` — ディレクトリ構成、命名規則、インポート順序
+- `.kiro/steering/patterns.md` — 実装で確立されたアーキテクチャパターン、設計上の注意点
 - `.kiro/specs/anarchy-reversi-core/requirements.md` — 機能要件
 - `.kiro/specs/anarchy-reversi-core/design.md` — 詳細設計
 - `.kiro/specs/anarchy-reversi-core/tasks.md` — 実装タスク
