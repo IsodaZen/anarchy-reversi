@@ -40,6 +40,7 @@ const gameSlice = createSlice({
       if (isUnflip) {
         // アンフリップ: 裏返し済みの石を元に戻す
         state.board[row][col] = opponent;
+        state.flippingCells.push({ row, col });
         state.flippedCells = state.flippedCells.filter(
           (c) => c.row !== row || c.col !== col,
         );

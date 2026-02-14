@@ -114,6 +114,16 @@ describe('gameSlice - flipPiece', () => {
     expect(afterUnflip.flippedCells).not.toContainEqual({ row: 3, col: 3 });
   });
 
+  it('アンフリップ時にflippingCellsが設定される（アニメーション発火）', () => {
+    const state = createDefaultState();
+    const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
+    const afterFlip = gameReducer(afterPlace, flipPiece({ row: 3, col: 3 }));
+    expect(afterFlip.flippingCells).toContainEqual({ row: 3, col: 3 });
+    // アンフリップ時もflippingCellsに追加される
+    const afterUnflip = gameReducer(afterFlip, flipPiece({ row: 3, col: 3 }));
+    expect(afterUnflip.flippingCells).toContainEqual({ row: 3, col: 3 });
+  });
+
   it('裏返し回数がflipCountで追跡される', () => {
     const state = createDefaultState();
     const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
