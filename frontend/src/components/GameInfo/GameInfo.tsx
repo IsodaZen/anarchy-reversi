@@ -3,10 +3,11 @@ import type { PlayerColor, GamePhase } from '../../types/game';
 interface GameInfoProps {
   currentTurn: PlayerColor;
   phase: GamePhase;
+  flipCount: number;
   onEndTurn: () => void;
 }
 
-export function GameInfo({ currentTurn, phase, onEndTurn }: GameInfoProps) {
+export function GameInfo({ currentTurn, phase, flipCount, onEndTurn }: GameInfoProps) {
   const turnLabel = currentTurn === 'black' ? '黒' : '白';
   const phaseLabel = phase === 'placement' ? '石をおこう！' : 'ひっくり返せるよ！';
 
@@ -25,7 +26,7 @@ export function GameInfo({ currentTurn, phase, onEndTurn }: GameInfoProps) {
       </div>
       <button
         onClick={onEndTurn}
-        disabled={phase === 'placement'}
+        disabled={phase === 'placement' || flipCount < 1}
         className="px-4 py-2 rounded-lg font-bold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
         手番終了

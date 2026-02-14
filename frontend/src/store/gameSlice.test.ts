@@ -11,6 +11,7 @@ function createDefaultState(): GameState {
     currentTurn: 'black',
     phase: 'placement',
     flippingCells: [],
+    flipCount: 0,
     roomId: null,
     playerId: null,
     isConnected: false,
@@ -100,6 +101,39 @@ describe('gameSlice - flipPiece', () => {
     expect(afterFlip2.board[3][3]).toBe('black');
     expect(afterFlip2.board[4][4]).toBe('black');
   });
+
+  it('裏返し済みの石をクリックすると元に戻る（アンフリップ）', () => {
+    const state = createDefaultState();
+    const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
+    const afterFlip = gameReducer(afterPlace, flipPiece({ row: 3, col: 3 }));
+    expect(afterFlip.board[3][3]).toBe('black');
+    // 裏返し済みの石を再度クリック → 元に戻る
+    const afterUnflip = gameReducer(afterFlip, flipPiece({ row: 3, col: 3 }));
+    expect(afterUnflip.board[3][3]).toBe('white');
+    expect(afterUnflip.flippingCells).not.toContainEqual({ row: 3, col: 3 });
+  });
+
+  it('裏返し回数がflipCountで追跡される', () => {
+    const state = createDefaultState();
+    const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
+    expect(afterPlace.flipCount).toBe(0);
+    const afterFlip1 = gameReducer(afterPlace, flipPiece({ row: 3, col: 3 }));
+    expect(afterFlip1.flipCount).toBe(1);
+    const afterFlip2 = gameReducer(afterFlip1, flipPiece({ row: 4, col: 4 }));
+    expect(afterFlip2.flipCount).toBe(2);
+    // アンフリップでカウントが減る
+    const afterUnflip = gameReducer(afterFlip2, flipPiece({ row: 3, col: 3 }));
+    expect(afterUnflip.flipCount).toBe(1);
+  });
+
+  it('手番終了でflipCountがリセットされる', () => {
+    const state = createDefaultState();
+    const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
+    const afterFlip = gameReducer(afterPlace, flipPiece({ row: 3, col: 3 }));
+    expect(afterFlip.flipCount).toBe(1);
+    const afterEnd = gameReducer(afterFlip, endTurn());
+    expect(afterEnd.flipCount).toBe(0);
+  });
 });
 
 describe('gameSlice - endTurn', () => {
@@ -128,6 +162,7 @@ describe('gameSlice - endTurn', () => {
       currentTurn: 'black',
       phase: 'flipping',
       flippingCells: [],
+      flipCount: 0,
       roomId: null,
       playerId: null,
       isConnected: false,
