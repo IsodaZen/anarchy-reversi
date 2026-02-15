@@ -4,6 +4,7 @@ export type CellState = 'black' | 'white' | null;
 export type Board = CellState[][];
 export type PlayerColor = 'black' | 'white';
 export type GamePhase = 'placement' | 'flipping';
+export type GameResult = PlayerColor | 'draw';
 
 export interface Position {
   row: number;
@@ -21,6 +22,8 @@ export interface GameState {
   roomId: string | null;
   playerId: string | null;
   isConnected: boolean;
+  isGameOver: boolean;
+  winner: GameResult | null;
 }
 
 export interface Player {
