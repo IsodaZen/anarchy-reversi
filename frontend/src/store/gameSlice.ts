@@ -15,6 +15,8 @@ const initialState: GameState = {
   roomId: null,
   playerId: null,
   isConnected: false,
+  isGameOver: false,
+  winner: null,
 };
 
 const gameSlice = createSlice({
@@ -23,6 +25,7 @@ const gameSlice = createSlice({
   reducers: {
     // 配置フェーズで合法手に石を配置し、裏返しフェーズへ遷移
     placePiece: (state, action: PayloadAction<Position>) => {
+      if (state.isGameOver) return;
       const { row, col } = action.payload;
       state.board[row][col] = state.currentTurn;
       state.phase = 'flipping';
@@ -31,6 +34,7 @@ const gameSlice = createSlice({
 
     // 裏返しフェーズで石を裏返す（相手→自分）またはアンフリップ（自分→相手）
     flipPiece: (state, action: PayloadAction<Position>) => {
+      if (state.isGameOver) return;
       const { row, col } = action.payload;
       const opponent = state.currentTurn === 'black' ? 'white' : 'black';
       const isUnflip = state.flippedCells.some(
@@ -73,7 +77,12 @@ const gameSlice = createSlice({
       } else if (hasValidMoves(state.board, state.currentTurn)) {
         // 相手に合法手がなく、自分にある場合は自動パス（手番そのまま）
       }
-      // 両者とも合法手がない場合はそのまま停止
+      // 両者とも合法手がない場合はゲーム終了
+      if (!hasValidMoves(state.board, 'black') && !hasValidMoves(state.board, 'white')) {
+        state.isGameOver = true;
+        const { black, white } = state.score;
+        state.winner = black > white ? 'black' : white > black ? 'white' : 'draw';
+      }
 
       state.phase = 'placement';
       state.flippingCells = [];
@@ -97,6 +106,8 @@ const gameSlice = createSlice({
       state.flippingCells = [];
       state.flippedCells = [];
       state.flipCount = 0;
+      state.isGameOver = false;
+      state.winner = null;
     },
 
     // ルーム情報を設定
@@ -123,6 +134,8 @@ const gameSlice = createSlice({
       state.flippingCells = [];
       state.flippedCells = [];
       state.flipCount = 0;
+      state.isGameOver = false;
+      state.winner = null;
     },
   },
 });

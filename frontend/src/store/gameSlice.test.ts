@@ -16,6 +16,8 @@ function createDefaultState(): GameState {
     roomId: null,
     playerId: null,
     isConnected: false,
+    isGameOver: false,
+    winner: null,
   };
 }
 
@@ -178,10 +180,122 @@ describe('gameSlice - endTurn', () => {
       roomId: null,
       playerId: null,
       isConnected: false,
+      isGameOver: false,
+      winner: null,
     };
     const afterEnd = gameReducer(state, endTurn());
     // 白に合法手がないので自動パスで黒のまま
     expect(afterEnd.currentTurn).toBe('black');
     expect(afterEnd.phase).toBe('placement');
+    expect(afterEnd.isGameOver).toBe(false);
+  });
+});
+
+describe('gameSlice - ゲーム終了判定', () => {
+  /** 両者合法手なしの盤面を作成するヘルパー */
+  function createGameOverState(blackCount: number, whiteCount: number): GameState {
+    // 全セルを埋めた盤面（合法手なし）
+    const board: Board = Array(8).fill(null).map(() => Array(8).fill(null));
+    let bPlaced = 0;
+    let wPlaced = 0;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (bPlaced < blackCount) {
+          board[r][c] = 'black';
+          bPlaced++;
+        } else if (wPlaced < whiteCount) {
+          board[r][c] = 'white';
+          wPlaced++;
+        }
+      }
+    }
+    return {
+      board,
+      score: { black: blackCount, white: whiteCount },
+      currentTurn: 'black',
+      phase: 'flipping',
+      flippingCells: [],
+      flippedCells: [],
+      flipCount: 0,
+      roomId: null,
+      playerId: null,
+      isConnected: false,
+      isGameOver: false,
+      winner: null,
+    };
+  }
+
+  it('両者合法手なしでゲーム終了・黒勝ち', () => {
+    const state = createGameOverState(40, 24);
+    const afterEnd = gameReducer(state, endTurn());
+    expect(afterEnd.isGameOver).toBe(true);
+    expect(afterEnd.winner).toBe('black');
+  });
+
+  it('両者合法手なしでゲーム終了・白勝ち', () => {
+    const state = createGameOverState(20, 44);
+    const afterEnd = gameReducer(state, endTurn());
+    expect(afterEnd.isGameOver).toBe(true);
+    expect(afterEnd.winner).toBe('white');
+  });
+
+  it('両者合法手なしで同スコアなら引き分け', () => {
+    const state = createGameOverState(32, 32);
+    const afterEnd = gameReducer(state, endTurn());
+    expect(afterEnd.isGameOver).toBe(true);
+    expect(afterEnd.winner).toBe('draw');
+  });
+
+  it('一方のみ合法手なし（自動パス）ではゲーム続行', () => {
+    // 黒(0,0), 白(0,1)のみ → 黒は(0,2)に置ける、白は置けない
+    const board: Board = Array(8).fill(null).map(() => Array(8).fill(null));
+    board[0][0] = 'black';
+    board[0][1] = 'white';
+    const state: GameState = {
+      board,
+      score: { black: 1, white: 1 },
+      currentTurn: 'black',
+      phase: 'flipping',
+      flippingCells: [],
+      flippedCells: [],
+      flipCount: 0,
+      roomId: null,
+      playerId: null,
+      isConnected: false,
+      isGameOver: false,
+      winner: null,
+    };
+    const afterEnd = gameReducer(state, endTurn());
+    expect(afterEnd.isGameOver).toBe(false);
+    expect(afterEnd.winner).toBeNull();
+  });
+
+  it('ゲーム終了中にplacePieceは状態を変更しない', () => {
+    const state = createDefaultState();
+    state.isGameOver = true;
+    state.winner = 'black';
+    const beforeBoard = JSON.stringify(state.board);
+    const afterPlace = gameReducer(state, placePiece({ row: 2, col: 3 }));
+    expect(JSON.stringify(afterPlace.board)).toBe(beforeBoard);
+    expect(afterPlace.phase).toBe('placement');
+  });
+
+  it('ゲーム終了中にflipPieceは状態を変更しない', () => {
+    const state = createDefaultState();
+    state.isGameOver = true;
+    state.winner = 'black';
+    state.phase = 'flipping';
+    const beforeBoard = JSON.stringify(state.board);
+    const afterFlip = gameReducer(state, flipPiece({ row: 3, col: 3 }));
+    expect(JSON.stringify(afterFlip.board)).toBe(beforeBoard);
+  });
+
+  it('リセットでゲーム終了状態が初期化される', () => {
+    const state = createDefaultState();
+    state.isGameOver = true;
+    state.winner = 'black';
+    const reset = gameReducer(state, resetGame());
+    expect(reset.isGameOver).toBe(false);
+    expect(reset.winner).toBeNull();
   });
 });

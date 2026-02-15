@@ -6,15 +6,17 @@ import { getValidMoves, isValidMove } from '../utils/gameLogic';
 import { Board } from '../components/Board/Board';
 import { ScoreBoard } from '../components/ScoreBoard/ScoreBoard';
 import { GameInfo } from '../components/GameInfo/GameInfo';
+import { GameResultDialog } from '../components/GameResultDialog/GameResultDialog';
 
 export default function GameRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { board, score, currentTurn, phase, flippingCells, flippedCells, flipCount } = useAppSelector(
+  const { board, score, currentTurn, phase, flippingCells, flippedCells, flipCount, isGameOver, winner } = useAppSelector(
     (state) => state.game,
   );
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn]);
 
@@ -42,6 +44,11 @@ export default function GameRoom() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showHowToPlay]);
+
+  // ゲーム終了検出時に結果ダイアログを自動表示
+  useEffect(() => {
+    if (isGameOver) setShowResult(true);
+  }, [isGameOver]);
 
   const handleCellClick = useCallback(
     (row: number, col: number) => {
@@ -75,11 +82,25 @@ export default function GameRoom() {
 
   const handleReset = useCallback(() => {
     dispatch(resetGame());
+    setShowResult(false);
   }, [dispatch]);
 
   const handleLeaveRoom = () => {
     navigate('/');
   };
+
+  const handlePlayAgain = useCallback(() => {
+    dispatch(resetGame());
+    setShowResult(false);
+  }, [dispatch]);
+
+  const handleCloseResult = useCallback(() => {
+    setShowResult(false);
+  }, []);
+
+  const handleShowResult = useCallback(() => {
+    setShowResult(true);
+  }, []);
 
   const turnLabel = currentTurn === 'black' ? '黒' : '白';
   const phaseLabel = phase === 'placement' ? '石をおこう！' : 'ひっくり返せるよ！';
@@ -116,24 +137,33 @@ export default function GameRoom() {
         <div className="mb-3 lg:hidden">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <div
-                className={`w-6 h-6 rounded-full ${
-                  currentTurn === 'black'
-                    ? 'bg-gray-900'
-                    : 'bg-white border-2 border-gray-300'
-                }`}
-              />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                {turnLabel}の番
-              </span>
-              <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                {phaseLabel}
-              </span>
+              {isGameOver ? (
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  ゲームしゅうりょう！
+                </span>
+              ) : (
+                <>
+                  <div
+                    className={`w-6 h-6 rounded-full ${
+                      currentTurn === 'black'
+                        ? 'bg-gray-900'
+                        : 'bg-white border-2 border-gray-300'
+                    }`}
+                  />
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {turnLabel}の番
+                  </span>
+                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                    {phaseLabel}
+                  </span>
+                </>
+              )}
             </div>
             <ScoreBoard
               blackCount={score.black}
               whiteCount={score.white}
               currentTurn={currentTurn}
+              winner={isGameOver ? winner : undefined}
             />
           </div>
         </div>
@@ -156,13 +186,24 @@ export default function GameRoom() {
 
             {/* モバイル: アクションボタン（ボード直下） */}
             <div className="mt-3 lg:hidden">
-              <button
-                onClick={handleEndTurn}
-                disabled={phase === 'placement' || flipCount < 1}
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
-              >
-                手番終了
-              </button>
+              {isGameOver ? (
+                isGameOver && !showResult && (
+                  <button
+                    onClick={handleShowResult}
+                    className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
+                  >
+                    結果を見る
+                  </button>
+                )
+              ) : (
+                <button
+                  onClick={handleEndTurn}
+                  disabled={phase === 'placement' || flipCount < 1}
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
+                >
+                  手番終了
+                </button>
+              )}
             </div>
           </div>
 
@@ -177,6 +218,7 @@ export default function GameRoom() {
                 blackCount={score.black}
                 whiteCount={score.white}
                 currentTurn={currentTurn}
+                winner={isGameOver ? winner : undefined}
               />
             </div>
 
@@ -190,6 +232,8 @@ export default function GameRoom() {
                 phase={phase}
                 flipCount={flipCount}
                 onEndTurn={handleEndTurn}
+                isGameOver={isGameOver}
+                onShowResult={isGameOver && !showResult ? handleShowResult : undefined}
               />
             </div>
 
@@ -239,6 +283,15 @@ export default function GameRoom() {
             </div>
           </div>
         )}
+
+        {/* ゲーム結果ダイアログ */}
+        <GameResultDialog
+          isOpen={showResult}
+          winner={winner}
+          score={score}
+          onPlayAgain={handlePlayAgain}
+          onClose={handleCloseResult}
+        />
       </div>
     </div>
   );
